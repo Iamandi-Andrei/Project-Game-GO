@@ -1,3 +1,6 @@
+import random
+
+
 class Board:
     Rows = []
 
@@ -13,12 +16,14 @@ class Game:
     playerTurn = 0
     scoreWhite = 0
     scoreBlack = 0
+    previousMove =[]
 
     def __init__(self, size):
         self.scoreWhite = 0
         self.scoreBlack = 0
         self.board = Board(size)
         self.playerTurn = 1
+        self.previousMove =[]
 
 
 def compare_colors(game, color, position):
@@ -99,8 +104,10 @@ def capture_pieces(game, previous_move):
             for elem in group:
                 game.board.Rows[elem[0]][elem[1]] = -1
                 if game.playerTurn == 1:
+                    print("WhiteScored at " + str(elem[0]) + " " + str(elem[1]))
                     game.scoreWhite += 1
                 else:
+                    print("WhiteScored at " + str(elem[0]) + " " + str(elem[1]))
                     game.scoreBlack += 1
 
 
@@ -111,13 +118,17 @@ def validate_move(game, position):
 
     previous = game.board.Rows[position[0]][position[1]]
     game.board.Rows[position[0]][position[1]] = game.playerTurn
-
-    if not get_liberties_pos(game, total_positions):
-        neighbours = get_neighbour_group(game, total_positions)
-        if get_liberties_pos(game, neighbours):
+    if game.previousMove:
+        if not get_liberties_pos(game,[game.previousMove]):
             game.board.Rows[position[0]][position[1]] = previous
             return False
-        return True
+    if not get_liberties_pos(game, total_positions):
+        neighbours = get_neighbour_group(game, total_positions)
+        for neighbour in neighbours:
+            if not get_liberties_pos(game,[neighbour]):
+                return True
+        game.board.Rows[position[0]][position[1]] = previous
+        return False
     return True
 
 
@@ -126,19 +137,17 @@ def move_piece(game, position):
         game.board.Rows[position[0]][position[1]] = game.playerTurn
         game.playerTurn = (game.playerTurn + 1) % 2
         capture_pieces(game, position)
+        game.previousMove = position
+        return True
+    return False
 
 
 def pass_turn(game):
     game.playerTurn = (game.playerTurn + 1) % 2
 
 
-joc = Game(12)
-while True:
-    pos1 = int(input("00: "))
-    pos2 = int(input("11: "))
-    move_piece(joc, [pos1, pos2])
-    for row in joc.board.Rows:
-        print(row)
+
+
 
 # move_piece(joc, [0, 0])
 # pass_turn(joc)
