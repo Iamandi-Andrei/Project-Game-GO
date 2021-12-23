@@ -77,7 +77,6 @@ def get_neighbour_group(game, positions):
 def get_group_positions(game, position):
     """
     :param game:
-    :param color:
     :param position:
     :return:
     """
@@ -95,11 +94,10 @@ def get_group_positions(game, position):
 
 
 def get_liberties_pos(game, positions):
-    color = game.board.Rows[positions[0][0]][positions[0][1]]
     liberties = []
-    total_positions =[]
+    total_positions = []
     for pos in positions:
-        for elem in get_group_positions(game,pos):
+        for elem in get_group_positions(game, pos):
             if elem not in total_positions:
                 total_positions.append(elem)
     for pos in total_positions:
@@ -109,7 +107,7 @@ def get_liberties_pos(game, positions):
     return liberties
 
 
-def capture_pieces(game,previous_move):
+def capture_pieces(game, previous_move):
     game.previousCaptureCount = 0
     # for i in range(0, len(game.board.Rows)):
     #     for j in range(0, len(game.board.Rows[0])):
@@ -126,7 +124,7 @@ def capture_pieces(game,previous_move):
     #                         game.scoreBlack += 1
     #                         game.previousCaptureCount += 1
     #                     game.board.Rows[elem[0]][elem[1]] = -1
-    for neighbour in get_neighbour_group(game, get_group_positions(game,previous_move)):
+    for neighbour in get_neighbour_group(game, get_group_positions(game, previous_move)):
         group = get_group_positions(game, neighbour)
         if not get_liberties_pos(game, group):
             for elem in group:
@@ -137,8 +135,9 @@ def capture_pieces(game,previous_move):
                 else:
                     print("BlackScored at " + str(elem[0]) + " " + str(elem[1]))
                     game.scoreBlack += 1
-                    game.previousCaptureCount +=1
+                    game.previousCaptureCount += 1
                 game.board.Rows[elem[0]][elem[1]] = -1
+
 
 def validate_move(game, position):
     if game.board.Rows[position[0]][position[1]] != -1:
@@ -168,20 +167,20 @@ def move_piece(game, position):
     if validate_move(game, position):
         game.board.Rows[position[0]][position[1]] = game.playerTurn
         game.playerTurn = (game.playerTurn + 1) % 2
-        capture_pieces(game,position)
+        capture_pieces(game, position)
         game.previousMove = position
         game.skippedRecently = 0
         return True
-    print("Failed to move: " + str(game.playerTurn) + " at " + str(position[0])+ " " + str(position[1]))
+    print("Failed to move: " + str(game.playerTurn) + " at " + str(position[0]) + " " + str(position[1]))
     return False
 
 
 def pass_turn(game):
     game.playerTurn = (game.playerTurn + 1) % 2
     game.skippedRecently += 1
-    game.previousMove =[]
+    game.previousMove = []
     game.previousCaptureCount = 0
-    #capture_pieces(game)
+    # capture_pieces(game)
 
 
 def available_positions(game):
@@ -194,14 +193,14 @@ def available_positions(game):
     return moves
 
 
-def random_ai(game,tries):
+def random_ai(game, tries):
     failed = True
     iterations = 0
     while failed:
         random_pos_x = random.randint(0, len(game.board.Rows) - 1)
         random_pos_y = random.randint(0, len(game.board.Rows) - 1)
         if move_piece(game, [random_pos_x, random_pos_y]):
-            print("Moved: " + str((game.playerTurn+1)%2) + " to " + str(random_pos_x) + " " + str(random_pos_y))
+            print("Moved: " + str((game.playerTurn + 1) % 2) + " to " + str(random_pos_x) + " " + str(random_pos_y))
             failed = False
         iterations += 1
         if iterations > tries:
@@ -224,20 +223,64 @@ def is_final(game):
     return False
 
 
+def get_neighbour_colors(game, position):
+    colors = []
+    if position[0] > 0:
+        colors.append(game.board.Rows[position[0] - 1][position[1]])
+    if position[0] < len(game.board.Rows) - 1:
+        colors.append(game.board.Rows[position[0] + 1][position[1]])
+    if position[1] > 0:
+        colors.append(game.board.Rows[position[0]][position[1] - 1])
+    if position[1] < len(game.board.Rows[0]) - 1:
+        colors.append(game.board.Rows[position[0]][position[1] + 1])
+    return colors
+
+
+def group_surrounded_by(game, positions):
+    total_colors = []
+    for pos in positions:
+        total_colors.extend(get_neighbour_colors(game, pos))
+    if 1 in total_colors and 0 in total_colors:
+        return -1
+    elif 1 in total_colors:
+        return 1
+    else:
+        return 0
+
+
 def compute_scores(game):
-    whitePieces = 0
-    blackPieces = 0
+    white_pieces = 0
+    black_pieces = 0
+    uncaptured_spaces = []
     for i in range(0, len(game.board.Rows)):
         for j in range(0, len(game.board.Rows[0])):
             if game.board.Rows[i][j] == 0:
-                whitePieces +=1
-            if game.board.Rows[i][j] == 1:
-                blackPieces +=1
-    return [blackPieces + game.scoreBlack , whitePieces + game.scoreWhite]
+                white_pieces += 1
+            elif game.board.Rows[i][j] == 1:
+                black_pieces += 1
+            else:
+                uncaptured_spaces.append([i, j])
+    surrounded_white = 0
+    surrounded_black = 0
+    while uncaptured_spaces:
+        elem = uncaptured_spaces[0]
+        group = get_group_positions(game, elem)
+        captor = group_surrounded_by(game, group)
+        if captor != -1:
+            if captor == 0:
+                surrounded_white += len(group)
+            else:
+                surrounded_black += len(group)
+        uncaptured_spaces = list(filter(lambda x: x not in group, uncaptured_spaces))
+    print("Pieces on board -- pieces captured -- free spaces under control")
+    print("Black")
+    print(str(black_pieces) + " -- " + str(game.scoreBlack) + " -- " + str(surrounded_black))
+    print("White")
+    print(str(white_pieces) + " -- " + str(game.scoreWhite) + " -- " + str(surrounded_white))
+    return [black_pieces + game.scoreBlack, white_pieces + game.scoreWhite]
 
 
-joc = Game(9)
-
+joc = Game(19)
 
 while not is_final(joc):
     # failed = True
@@ -252,19 +295,18 @@ while not is_final(joc):
     #         failed = False
     #         for row in joc.board.Rows:
     #             print(row)
-    random_ai(joc,30)
+    random_ai(joc, 10)
     print("AI moved -------")
     for row in joc.board.Rows:
         print(row)
     print("AI moved -------")
-    random_ai(joc,30)
+    random_ai(joc, 10)
     for row in joc.board.Rows:
         print(row)
 
-
-
-print("blackScore: " + str(compute_scores(joc)[0]))
-print("whiteScore: " + str(compute_scores(joc)[1]))
+compute_scores(joc)
+# print("blackScore: " + str(compute_scores(joc)[0]))
+# print("whiteScore: " + str(compute_scores(joc)[1]))
 
 # joc = Game(5)
 # # joc.board.Rows=[[1,1,1,1,1,-1],[1,0,0,0,1,-1],[1,0,-1,0,1,-1],[1,0,0,0,1,-1],[1,1,1,1,1,-1],[-1,-1,-1,-1,-1,-1]]
