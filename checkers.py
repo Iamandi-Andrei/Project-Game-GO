@@ -109,21 +109,6 @@ def get_liberties_pos(game, positions):
 
 def capture_pieces(game, previous_move):
     game.previousCaptureCount = 0
-    # for i in range(0, len(game.board.Rows)):
-    #     for j in range(0, len(game.board.Rows[0])):
-    #         if game.board.Rows[i][j] != -1:
-    #             group = get_group_positions(game,[i,j])
-    #             if not get_liberties_pos(game, group):
-    #                 for elem in group:
-    #                     if game.board.Rows[elem[0]][elem[1]] == 1:
-    #                         print("WhiteScored at " + str(elem[0]) + " " + str(elem[1]))
-    #                         game.scoreWhite += 1
-    #                         game.previousCaptureCount += 1
-    #                     else:
-    #                         print("BlackScored at " + str(elem[0]) + " " + str(elem[1]))
-    #                         game.scoreBlack += 1
-    #                         game.previousCaptureCount += 1
-    #                     game.board.Rows[elem[0]][elem[1]] = -1
     for neighbour in get_neighbour_group(game, get_group_positions(game, previous_move)):
         group = get_group_positions(game, neighbour)
         if not get_liberties_pos(game, group):
@@ -180,7 +165,7 @@ def pass_turn(game):
     game.skippedRecently += 1
     game.previousMove = []
     game.previousCaptureCount = 0
-    # capture_pieces(game)
+
 
 
 def available_positions(game):
@@ -207,14 +192,7 @@ def random_ai(game, tries):
             pass_turn(game)
             print("Skipped")
             break
-    # available = available_positions(game)
-    # if len(available) > 0:
-    #     move = random.choice(available)
-    #     move_piece(game, move)
-    #     print("Moved: " + str((game.playerTurn + 1) % 2) + " to " + str(move[0]) + " " + str(move[1]))
-    # else:
-    #     pass_turn(game)
-    #     print("Skipped")
+
 
 
 def is_final(game):
@@ -248,6 +226,11 @@ def group_surrounded_by(game, positions):
         return 0
 
 
+def printGame(game):
+    for row in game.board.Rows:
+        print(row)
+
+
 def compute_scores(game):
     white_pieces = 0
     black_pieces = 0
@@ -277,67 +260,35 @@ def compute_scores(game):
     print(str(black_pieces) + " -- " + str(game.scoreBlack) + " -- " + str(surrounded_black))
     print("White")
     print(str(white_pieces) + " -- " + str(game.scoreWhite) + " -- " + str(surrounded_white))
-    return [black_pieces + game.scoreBlack, white_pieces + game.scoreWhite]
+    return [surrounded_black + game.scoreBlack, surrounded_white + game.scoreWhite]
 
 
-joc = Game(19)
-
-while not is_final(joc):
-    # failed = True
-    # while failed:
-    #     pos1 = int(input("00: "))
-    #     pos2 = int(input("11: "))
-    #     if pos1 == 69:
-    #         running = False
-    #         pass_turn(joc)
-    #         break
-    #     if move_piece(joc, [pos1, pos2]):
-    #         failed = False
-    #         for row in joc.board.Rows:
-    #             print(row)
-    random_ai(joc, 10)
-    print("AI moved -------")
-    for row in joc.board.Rows:
-        print(row)
-    print("AI moved -------")
-    random_ai(joc, 10)
-    for row in joc.board.Rows:
-        print(row)
-
-compute_scores(joc)
+# joc = Game(19)
+#
+# while not is_final(joc):
+#     # failed = True
+#     # while failed:
+#     #     pos1 = int(input("00: "))
+#     #     pos2 = int(input("11: "))
+#     #     if pos1 == 69:
+#     #         running = False
+#     #         pass_turn(joc)
+#     #         break
+#     #     if move_piece(joc, [pos1, pos2]):
+#     #         failed = False
+#     #         for row in joc.board.Rows:
+#     #             print(row)
+#     random_ai(joc, 10)
+#     print("AI moved -------")
+#     for row in joc.board.Rows:
+#         print(row)
+#     print("AI moved -------")
+#     random_ai(joc, 10)
+#     for row in joc.board.Rows:
+#         print(row)
+#
+# compute_scores(joc)
 # print("blackScore: " + str(compute_scores(joc)[0]))
 # print("whiteScore: " + str(compute_scores(joc)[1]))
 
-# joc = Game(5)
-# # joc.board.Rows=[[1,1,1,1,1,-1],[1,0,0,0,1,-1],[1,0,-1,0,1,-1],[1,0,0,0,1,-1],[1,1,1,1,1,-1],[-1,-1,-1,-1,-1,-1]]
-# joc.board.Rows=[[-1,1,0,-1,-1],[1,0,-1,0,-1],[-1,1,0,-1,-1],[-1,-1,-1,-1,-1],[-1,-1,-1,-1,-1]]
-# move_piece(joc,[1,2])
-# pass_turn(joc)
-# pass_turn(joc)
-# move_piece(joc,[1,1])
-# move_piece(joc, [0, 0])
-# pass_turn(joc)
-# move_piece(joc,[1,0])
-# # move_piece(joc,[0,0])
-# pass_turn(joc)
-# move_piece(joc, [1, 1])
-# pass_turn(joc)
-# move_piece(joc, [1, 2])
-# pass_turn(joc)
-# move_piece(joc, [0, 3])
-# move_piece(joc, [0, 1])
-# move_piece(joc, [0, 2])
 
-# for row in joc.board.Rows:
-#     print(row)
-# print(get_group_positions(joc,[1,0]))
-# move_piece(joc, [0, 0])
-# move_piece(joc, [0, 1])
-# move_piece(joc, [1, 1])
-# pass_turn(joc)
-# move_piece(joc,[1,3])
-# pass_turn(joc)
-# move_piece(joc,[0,2])
-# pass_turn(joc)
-# move_piece(joc,[2,2])
-# move_piece(joc,[1,2])
