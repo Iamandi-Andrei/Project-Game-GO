@@ -78,7 +78,7 @@ def get_group_positions(game, position):
     """
     :param game:
     :param position:
-    :return:
+    :return: the list of all the positions connected to the given position that have the same color
     """
     color = game.board.Rows[position[0]][position[1]]
     positions = [position]
@@ -94,6 +94,11 @@ def get_group_positions(game, position):
 
 
 def get_liberties_pos(game, positions):
+    """
+    :param game:
+    :param positions:
+    :return: all the positions marked -1 that are around the given position's group
+    """
     liberties = []
     total_positions = []
     for pos in positions:
@@ -108,6 +113,12 @@ def get_liberties_pos(game, positions):
 
 
 def capture_pieces(game, previous_move):
+    """
+    Called after ending a turn.
+    :param game:
+    :param previous_move:
+    :return:  Based on the previous move, it captures the pieces that have no remaining liberties
+    """
     game.previousCaptureCount = 0
     for neighbour in get_neighbour_group(game, get_group_positions(game, previous_move)):
         group = get_group_positions(game, neighbour)
@@ -125,6 +136,15 @@ def capture_pieces(game, previous_move):
 
 
 def validate_move(game, position):
+    """
+    Three main rules to check if the move is valid.
+    1) Cant place pieces on an already occupied spot
+    2) You can't capture the piece that was placed right beore your turn if that piece only captured one piece ( Simple 2-turn loop prevention)
+    3) You can't "suicide" unless by doing so, you capture enemy pieces and the "suicide" is undone
+    :param game:
+    :param position:
+    :return: True or False if the move is valid based on the rules above
+    """
     if game.board.Rows[position[0]][position[1]] != -1:
         return False
     previous = game.board.Rows[position[0]][position[1]]
@@ -149,6 +169,12 @@ def validate_move(game, position):
 
 
 def move_piece(game, position):
+    """
+    During a turn, the first step is to validate the move, modify the board and capture enemy pieces afterwards
+    :param game:
+    :param position:
+    :return: True or False if the move was succesfull
+    """
     if validate_move(game, position):
         game.board.Rows[position[0]][position[1]] = game.playerTurn
         game.playerTurn = (game.playerTurn + 1) % 2
@@ -161,24 +187,24 @@ def move_piece(game, position):
 
 
 def pass_turn(game):
+    """
+    Skips a turn. Changes the game.playerTurn variable from 1 to 0 or 0 to 1
+    :param game:
+    :return:
+    """
     game.playerTurn = (game.playerTurn + 1) % 2
     game.skippedRecently += 1
     game.previousMove = []
     game.previousCaptureCount = 0
 
 
-
-def available_positions(game):
-    moves = []
-    for i in range(0, len(game.board.Rows)):
-        for j in range(0, len(game.board.Rows[0])):
-            if validate_move(game, [i, j]):
-                moves.append([i, j])
-
-    return moves
-
-
 def random_ai(game, tries):
+    """
+    The AI generates random positions, tries to make the move and skips if it fails too many items
+    :param game:
+    :param tries:  Max number of times the AI can fail to find an available move before skipping turn
+    :return:
+    """
     failed = True
     iterations = 0
     while failed:
@@ -194,7 +220,6 @@ def random_ai(game, tries):
             break
 
 
-
 def is_final(game):
     if game.skippedRecently >= 2:
         return True
@@ -202,6 +227,12 @@ def is_final(game):
 
 
 def get_neighbour_colors(game, position):
+    """
+
+    :param game:
+    :param position:
+    :return: All the colors of the up-down-right-left neighbours of the given position
+    """
     colors = []
     if position[0] > 0:
         colors.append(game.board.Rows[position[0] - 1][position[1]])
@@ -215,6 +246,12 @@ def get_neighbour_colors(game, position):
 
 
 def group_surrounded_by(game, positions):
+    """
+    Checks if the pieces group of the given position is fully surrounded by a single color
+    :param game:
+    :param positions:
+    :return: -1 if the group is surrounded by both "1" and "0" pieces and 0 or 1 otherwise
+    """
     total_colors = []
     for pos in positions:
         total_colors.extend(get_neighbour_colors(game, pos))
@@ -226,12 +263,19 @@ def group_surrounded_by(game, positions):
         return 0
 
 
-def printGame(game):
+def print_game(game):
     for row in game.board.Rows:
         print(row)
 
 
 def compute_scores(game):
+    """
+    Computes the total scores of the game.
+    Score formula = amount of captured pieces during the whole game + territory owned only by you
+    ( groups of unoccupied territory surrounded by only one color)
+    :param game:
+    :return:
+    """
     white_pieces = 0
     black_pieces = 0
     uncaptured_spaces = []
@@ -261,34 +305,3 @@ def compute_scores(game):
     print("White")
     print(str(white_pieces) + " -- " + str(game.scoreWhite) + " -- " + str(surrounded_white))
     return [surrounded_black + game.scoreBlack, surrounded_white + game.scoreWhite]
-
-
-# joc = Game(19)
-#
-# while not is_final(joc):
-#     # failed = True
-#     # while failed:
-#     #     pos1 = int(input("00: "))
-#     #     pos2 = int(input("11: "))
-#     #     if pos1 == 69:
-#     #         running = False
-#     #         pass_turn(joc)
-#     #         break
-#     #     if move_piece(joc, [pos1, pos2]):
-#     #         failed = False
-#     #         for row in joc.board.Rows:
-#     #             print(row)
-#     random_ai(joc, 10)
-#     print("AI moved -------")
-#     for row in joc.board.Rows:
-#         print(row)
-#     print("AI moved -------")
-#     random_ai(joc, 10)
-#     for row in joc.board.Rows:
-#         print(row)
-#
-# compute_scores(joc)
-# print("blackScore: " + str(compute_scores(joc)[0]))
-# print("whiteScore: " + str(compute_scores(joc)[1]))
-
-
