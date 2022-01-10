@@ -11,6 +11,9 @@ corespunzator.
 
 
 # Example photos
-![insert pic here](https://imgur.com/9vTeC8J)
+<p align="center">
+  <img src="https://imgur.com/9vTeC8J" width="350" title="">
+</p>
+
 
 
